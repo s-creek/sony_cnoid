@@ -125,6 +125,7 @@ RTC::ReturnCode_t sony::onInitialize()
   coil::stringTo(param.pitch_angle, prop["pitch_angle"].c_str());
   coil::stringTo(param.link_b_front, prop["link_b_front"].c_str());
   coil::stringTo(param.link_b_rear, prop["link_b_rear"].c_str());
+  coil::stringTo(param.link_b_ankle, prop["link_b_ankle"].c_str());
   coil::stringTo(param.dt, prop["wpg.dt"].c_str());
   coil::stringTo(param.ankle_height, prop["ankle_height"].c_str());
 
@@ -151,6 +152,13 @@ RTC::ReturnCode_t sony::onInitialize()
   //Link* TLink=m_robot->link("LLEG_JOINT5");
   //for joystick
   buttom_accept=true;
+
+
+  Eigen::MatrixXd zero(Eigen::MatrixXd::Zero(dof,1));
+  body_cur=MatrixXd::Zero(dof,1);
+  body_ref=MatrixXd::Zero(dof,1);
+
+
   return RTC::RTC_OK;
 }
 
@@ -169,11 +177,14 @@ RTC::ReturnCode_t sony::onExecute(RTC::UniqueId ec_id)
   //if(!m_rhsensorIn.isNew())
   //  return RTC::RTC_OK;
 
+  /*
   //sychronize with simulator
   step_counter+=1;
   step_counter=step_counter%m_nStep;
   if(step_counter!=0)
     return RTC::RTC_OK;
+  */
+
 
   //read inport
   hrp2Base::updates();
@@ -232,7 +243,7 @@ RTC::ReturnCode_t sony::onExecute(RTC::UniqueId ec_id)
   if(playflag){
     object_operate();   
 
-    #if 1
+    #if 0
     
     prmGenerator( flagcalczmp);//stopflag off here
 
@@ -279,8 +290,15 @@ RTC::ReturnCode_t sony::onExecute(RTC::UniqueId ec_id)
 
   //_/_/_/_/_/_/_/_/_test/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/  
   if(!bodyDeque.empty() && !playflag){
+<<<<<<< HEAD
     for(int i=0;i<m_robot->numJoints();i++)
       m_mc.data[i]=m_refq.data[i]=bodyDeque.at(0)(i);
+=======
+    for(int i=0;i<m_robot->numJoints();i++) {
+      //m_mc.data[i]=m_refq.data[i]=bodyDeque.at(0)(i);
+      m_refq.data[i]=bodyDeque.at(0)(i);
+    }
+>>>>>>> 2e1149c0a25f4037364ef194c8f2fae363cb2d61
     bodyDeque.pop_front();
     m_refqOut.write();
   }
@@ -307,11 +325,17 @@ inline void sony::rzmp2st()
 
 inline void sony::calcWholeIVK()
 {
+  
+  // ogawa
+  if((FT==FSRFsw)||(FT==RFsw)){
+    //std::cout << p_ref[RLEG].format(Eigen::IOFormat(Eigen::StreamPrecision, 0, ", ", ", ", "", "", "[", "]")) << std::endl;
+  }
+  
   if(usePivot){
     if(CalcIVK_biped_toe(m_robot, cm_ref, p_ref, R_ref, FT, end_link))
       getInvResult();
-    else
-      cerr<<"ivk err"<<endl;
+    //else
+      //cerr<<"ivk err"<<endl;
   }
   else{
     if(CalcIVK_biped(m_robot, cm_ref, p_ref, R_ref, FT, end_link))
@@ -411,15 +435,6 @@ void sony::start2walk(BodyPtr m_robot, ZmpPlaner *zmpP, bool &stopflag, Vector3 
 
 void sony::prm2Planzmp(FootType FT, Vector3 *p_ref, Matrix3 *R_ref, Vector3 RLEG_ref_p, Vector3 LLEG_ref_p, Matrix3 LEG_ref_R, std::deque<vector2> &rfzmp, ZmpPlaner *zmpP)
 {
-  /*
-  vector2  swLegRef_p;
-  if((FT==FSRFsw)||(FT==RFsw)){
-    swLegRef_p = pfromVector3(RLEG_ref_p) ;
-  }
-  else if((FT==FSLFsw)||(FT==LFsw)){
-    swLegRef_p = pfromVector3(LLEG_ref_p) ;
-  }
-  */
   Vector3  swLegRef_p;
   if((FT==FSRFsw)||(FT==RFsw)){
     swLegRef_p = RLEG_ref_p;
@@ -561,14 +576,14 @@ void sony::ifChangeSupLeg2(BodyPtr m_robot, FootType &FT,  ZmpPlaner *zmpP, bool
       else if(FT==FSLFsw||FT==RFsw)
 	FT=LFsw; 
 
-               
+      /*               
       if(stepNum==3){
-    RLEG_ref_p[0]+=0.35;
-    RLEG_ref_p[2]=0;
-    LLEG_ref_p[0]+=0.35;
-    LLEG_ref_p[2]=0;
-    }
-
+	RLEG_ref_p[0]+=0.35;
+	RLEG_ref_p[2]=0;
+	LLEG_ref_p[0]+=0.35;
+	LLEG_ref_p[2]=0;
+      }
+      */
 
       //change leg
       IniNewStep(m_robot, FT, zmpP, stopflag, CommandIn, p_ref, p_Init, R_ref, R_Init);
@@ -619,8 +634,10 @@ void sony::start()
   m_mcIn.read();
   //for(unsigned int i=0;i<m_mc.data.length();i++)
   //m_refq.data[i]=body_cur(i)=m_mc.data[i];
-  for(int i=0;i<dof;i++)
-    m_refq.data[i]=body_cur(i)=halfpos[i];
+  for(int i=0;i<dof;i++) {
+    //m_refq.data[i]=body_cur(i)=halfpos[i];
+    m_refq.data[i]=body_cur(i)=m_mc.data[i];
+  }
   setModelPosture(m_robot, m_mc, FT, end_link);
   RenewModel(m_robot, p_now, R_now, end_link);
 
@@ -756,6 +773,56 @@ void sony::setFootPosL()
 
 }
 
+void sony::setFootPosR(double x, double y, double z, double r, double p, double w)
+{
+  RLEG_ref_p[0]=x;
+  RLEG_ref_p[1]=y;
+  RLEG_ref_p[2]=z;
+  LEG_ref_R = cnoid::rotFromRpy(r,p,w);
+  
+  LLEG_ref_p[0]=x;
+  LLEG_ref_p[1]=-y;
+  LLEG_ref_p[2]=z;
+  LEG_ref_R = cnoid::rotFromRpy(r,p,w);
+
+  if(zmpP->cp_deque.empty()){
+    FT=FSRFsw;
+    CommandIn=0;//start to walk
+    if( stopflag ){
+      std::cout << "setFootPosR : start2walk" << std::endl;
+      std::cout << "setFootPosR : stepnum = " << stepNum << std::endl;
+      start2walk(m_robot, zmpP, stopflag, cm_ref);//stopflag off
+    }
+    prm2Planzmp(FT, p_ref, R_ref, RLEG_ref_p, LLEG_ref_p, LEG_ref_R, rfzmp, zmpP);
+    stepNum = 3;
+  }  
+  else {
+    stepNum+=1;
+  }
+}
+
+void sony::setFootPosL(double x, double y, double z, double r, double p, double w)
+{
+  LLEG_ref_p[0]=x;
+  LLEG_ref_p[1]=y;
+  LLEG_ref_p[2]=z;
+  LEG_ref_R = cnoid::rotFromRpy(r,p,w);
+  
+  if(zmpP->cp_deque.empty()){
+    FT=FSLFsw;
+    CommandIn=0;//start to walk
+    if( stopflag ){
+      std::cout << "setFootPosL : start2walk" << std::endl;
+      std::cout << "setFootPosL : stepnum = " << stepNum << std::endl;
+      start2walk(m_robot, zmpP, stopflag, cm_ref);//stopflag off
+    }
+    prm2Planzmp(FT, p_ref, R_ref, RLEG_ref_p, LLEG_ref_p, LEG_ref_R, rfzmp, zmpP);
+    stepNum = 2;
+  }  
+  else {
+    stepNum+=1;
+  }
+}
 
 
 void sony::testMove()
@@ -765,6 +832,13 @@ void sony::testMove()
   //zero=MatrixXd::Zero(dof,1);
   Eigen::MatrixXd zero(Eigen::MatrixXd::Zero(dof,1));
   body_cur=MatrixXd::Zero(dof,1);
+<<<<<<< HEAD
+=======
+  m_mcIn.read();
+  for(int i=0; i<dof; i++) {
+    body_cur(i) = m_mc.data[i];
+  }
+>>>>>>> 2e1149c0a25f4037364ef194c8f2fae363cb2d61
   /*
   //ver1
   body_ref<<0, 0.00332796, -0.482666, 0.859412, -0.370882, -0.00322683,
@@ -800,9 +874,10 @@ void sony::testMove()
 
   
   body_ref=MatrixXd::Zero(dof,1);
-  for(int i=0;i<dof;i++)
-    m_mc.data[i]=body_ref(i)=halfpos[i];
-  
+  for(int i=0;i<dof;i++) {
+    //m_mc.data[i]=body_ref(i)=halfpos[i];
+    body_ref(i)=halfpos[i];
+  }
   
   /*
 ////////////////////////////////////////
@@ -851,7 +926,8 @@ Interplation5(body_cur,  zero,  zero, body_ref,  zero,  zero, 5, bodyDeque);
   //////////////////////////////////////////////////
   */
 
-  Interplation5(body_cur,  zero,  zero, body_ref,  zero,  zero, 3, bodyDeque);
+  //Interplation5(body_cur,  zero,  zero, body_ref,  zero,  zero, 3, bodyDeque);
+  Interplation5(body_cur,  zero,  zero, body_ref,  zero,  zero, 8, bodyDeque);
 
   /*
   //
