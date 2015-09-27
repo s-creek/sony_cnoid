@@ -33,13 +33,13 @@ class ZmpPlaner {
   //void StopZMP(FootType FT, std::deque<vector2> &rfzmp, int count);
 
   //capture point/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_
-  void PlanCP( BodyPtr m_robot, FootType FT, Vector3 *p_ref, Matrix3 *R_ref, Vector3 swLegRef_p, Matrix3 input_ref_R, std::deque<vector2> &rfzmp, bool usePivot, string *end_link);
+  void PlanCP( BodyPtr m_robot, FootType FT, Vector3 *p_ref, Matrix3 *R_ref, Vector3 swLegRef_p, Matrix3 input_ref_R, std::deque<vector2> &rfzmp, bool usePivot, string *end_link, bool ifLastStep = 0);
 
   void PlanCPstop(BodyPtr m_robot ,FootType FT, Vector3 *p_ref, Matrix3 *R_ref, Vector3 swLegRef_p, Matrix3 input_ref_R, std::deque<vector2> &rfzmp, string *end_link); 
  
   void calcSwingLegCP( BodyPtr m_robot, FootType FT, Vector3 *p_ref, Matrix3 *R_ref, Vector3 swLegRef_p, Matrix3 object_ref_R, bool usePivot, string *end_link);
   
-  void setw(double &wIn);
+  void setw(double &cm_z_in);
   void setZmpOffsetX(double &cm_offset_x);
 
   void getNextCom(Vector3 &cm_ref);
@@ -70,6 +70,8 @@ class ZmpPlaner {
   double Tdbl_in;
   double ankle_height;
 
+  deque<double> cm_z_deque;
+
   //for capture point
   std::deque<vector2> cp_deque;
   vector2 cp;//last cp of one step
@@ -91,7 +93,10 @@ class ZmpPlaner {
   double *zmptemp;
   double pitch_angle;
   double Tp;
-
+  
+  double cm_z;
+  double cm_z_cur;
+  
   double stopPoint;
   double pitchMax;
 

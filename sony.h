@@ -91,7 +91,7 @@ class sony  : public hrp2Base
   inline void object_operate();
   inline void calcRefLeg();
   inline void prmGenerator(bool &calczmpflag);
-  void start2walk(BodyPtr m_robot, ZmpPlaner *zmpP, bool &stopflag, Vector3 cm_ref);
+  void start2walk(BodyPtr m_robot, ZmpPlaner *zmpP, bool &stopflag);
   void prm2Planzmp(FootType FT, Vector3 *p_ref, Matrix3 *R_ref, Vector3 RLEG_ref_p, Vector3 LLEG_ref_p, Matrix3 LEG_ref_R, std::deque<vector2> &rfzmp, ZmpPlaner *zmpP);
   void walkingMotion(BodyPtr m_robot, FootType FT, Vector3 &cm_ref, Vector3 &absZMP, Vector3 *p_Init, Vector3 *p_ref, Matrix3 *R_ref, std::deque<vector2> &rfzmp,  ZmpPlaner *zmpP);  
   
@@ -108,6 +108,7 @@ class sony  : public hrp2Base
   void stepping();
   void setObjectV(double x, double y, double z, double roll, double pitch, double yaw);
   void stop();
+  void omniWalkSwitch();
 
   void setFootPosR();
   void setFootPosL();
@@ -192,7 +193,10 @@ class sony  : public hrp2Base
   bool buttom_accept;
 
   int stepNum;
-
+  int neutralTime;
+  bool initialized;
+  bool omniWalk;
+  bool stopSequence;
 };
 
 
