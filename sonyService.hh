@@ -124,17 +124,11 @@ _CORBA_MODULE_BEG
     void testMove();
     void stepping();
     void stop();
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
     void omniWalkSwitch();
->>>>>>> a8366b36e798962e1c9d57076d8ba67464074610
     void setFootPosR2();
     void setFootPosL2();
     void setFootPosR(::CORBA::Double x, ::CORBA::Double y, ::CORBA::Double z, ::CORBA::Double r, ::CORBA::Double p, ::CORBA::Double w);
     void setFootPosL(::CORBA::Double x, ::CORBA::Double y, ::CORBA::Double z, ::CORBA::Double r, ::CORBA::Double p, ::CORBA::Double w);
->>>>>>> 2e1149c0a25f4037364ef194c8f2fae363cb2d61
 
     inline _objref_sonyService()  { _PR_setobj(0); }  // nil
     _objref_sonyService(omniIOR*, omniIdentity*);
@@ -173,17 +167,11 @@ _CORBA_MODULE_BEG
     virtual void testMove() = 0;
     virtual void stepping() = 0;
     virtual void stop() = 0;
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
     virtual void omniWalkSwitch() = 0;
->>>>>>> a8366b36e798962e1c9d57076d8ba67464074610
     virtual void setFootPosR2() = 0;
     virtual void setFootPosL2() = 0;
     virtual void setFootPosR(::CORBA::Double x, ::CORBA::Double y, ::CORBA::Double z, ::CORBA::Double r, ::CORBA::Double p, ::CORBA::Double w) = 0;
     virtual void setFootPosL(::CORBA::Double x, ::CORBA::Double y, ::CORBA::Double z, ::CORBA::Double r, ::CORBA::Double p, ::CORBA::Double w) = 0;
->>>>>>> 2e1149c0a25f4037364ef194c8f2fae363cb2d61
     
   public:  // Really protected, workaround for xlC
     virtual _CORBA_Boolean _dispatch(omniCallHandle&);

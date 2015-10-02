@@ -183,7 +183,7 @@ RTC::ReturnCode_t sony::onExecute(RTC::UniqueId ec_id)
   step_counter+=1;
   step_counter=step_counter%m_nStep;
   if(step_counter!=0)
-    return RTC::RTC_OK;
+  return RTC::RTC_OK;
   */
 
 
@@ -208,25 +208,25 @@ RTC::ReturnCode_t sony::onExecute(RTC::UniqueId ec_id)
 	step=0;
     }
     
-   //head
-   m_robot->link(HEAD_P)->q()-=0.6*m_axes.data[8]*M_PI/180;
-   m_robot->link(HEAD_P)->q()+=0.6*m_axes.data[10]*M_PI/180;
-   m_robot->link(HEAD_Y)->q()-=0.6*m_axes.data[9]*M_PI/180;
-   m_robot->link(HEAD_Y)->q()+=0.6*m_axes.data[11]*M_PI/180;
-   //light
-   if(buttom_accept){
-     if(m_axes.data[16]>=0.1){//^ buttom
-       m_light.data[0]=!m_light.data[0];
-       buttom_accept=false;
-     }
-   }
-   else{
-     if(m_axes.data[16]==0)
-       buttom_accept=true;
-   }
-   /*
-    double velsqr=pow(velobj(0),2) + pow(velobj(1),2);
-    if( velsqr > 64){
+    //head
+    m_robot->link(HEAD_P)->q()-=0.6*m_axes.data[8]*M_PI/180;
+    m_robot->link(HEAD_P)->q()+=0.6*m_axes.data[10]*M_PI/180;
+    m_robot->link(HEAD_Y)->q()-=0.6*m_axes.data[9]*M_PI/180;
+    m_robot->link(HEAD_Y)->q()+=0.6*m_axes.data[11]*M_PI/180;
+    //light
+    if(buttom_accept){
+      if(m_axes.data[16]>=0.1){//^ buttom
+	m_light.data[0]=!m_light.data[0];
+	buttom_accept=false;
+      }
+    }
+    else{
+      if(m_axes.data[16]==0)
+	buttom_accept=true;
+    }
+    /*
+      double velsqr=pow(velobj(0),2) + pow(velobj(1),2);
+      if( velsqr > 64){
       velobj(0)= velobj(0)* 8/ sqrt(velsqr);
       velobj(1)= velobj(1)* 8/ sqrt(velsqr);    
       }
@@ -239,15 +239,15 @@ RTC::ReturnCode_t sony::onExecute(RTC::UniqueId ec_id)
     /*
     //wire
     if(m_buttons.data[1]==1)//o button
-      step=1;
+    step=1;
     else if(m_buttons.data[0]==1)//x burron
-      step=0;
+    step=0;
     */
   }
 
-   //_/_/_/_/_/_/_/_/_/_/_/_/main algorithm_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+  //_/_/_/_/_/_/_/_/_/_/_/_/main algorithm_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
   if(playflag){
-    
+
     if(omniWalk){
       object_operate();   
       prmGenerator( flagcalczmp);//stopflag off here
@@ -293,22 +293,16 @@ RTC::ReturnCode_t sony::onExecute(RTC::UniqueId ec_id)
 
   //_/_/_/_/_/_/_/_/_test/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/  
   if(!bodyDeque.empty() && !playflag){
-<<<<<<< HEAD
-    for(int i=0;i<m_robot->numJoints();i++)
-      m_mc.data[i]=m_refq.data[i]=bodyDeque.at(0)(i);
-=======
     for(int i=0;i<m_robot->numJoints();i++) {
-      //m_mc.data[i]=m_refq.data[i]=bodyDeque.at(0)(i);
       m_refq.data[i]=bodyDeque.at(0)(i);
     }
->>>>>>> 2e1149c0a25f4037364ef194c8f2fae363cb2d61
     bodyDeque.pop_front();
     m_refqOut.write();
   }
     
- 
+  
   //ofs<<m_rfsensor.data[2]-m_lfsensor.data[2]<<endl;
- 
+  
  
   return RTC::RTC_OK;
 }
@@ -338,7 +332,7 @@ inline void sony::calcWholeIVK()
     if(CalcIVK_biped_toe(m_robot, cm_ref, p_ref, R_ref, FT, end_link))
       getInvResult();
     //else
-      //cerr<<"ivk err"<<endl;
+    //cerr<<"ivk err"<<endl;
   }
   else{
     if(CalcIVK_biped(m_robot, cm_ref, p_ref, R_ref, FT, end_link))
@@ -809,11 +803,6 @@ void sony::setFootPosR(double x, double y, double z, double r, double p, double 
   RLEG_ref_p[1]=y;
   RLEG_ref_p[2]=z;
   LEG_ref_R = cnoid::rotFromRpy(r,p,w);
-  
-  LLEG_ref_p[0]=x;
-  LLEG_ref_p[1]=-y;
-  LLEG_ref_p[2]=z;
-  LEG_ref_R = cnoid::rotFromRpy(r,p,w);
 
   if(zmpP->cp_deque.empty()){
     FT=FSRFsw;
@@ -824,7 +813,7 @@ void sony::setFootPosR(double x, double y, double z, double r, double p, double 
       start2walk(m_robot, zmpP, stopflag);//stopflag off
     }
     prm2Planzmp(FT, p_ref, R_ref, RLEG_ref_p, LLEG_ref_p, LEG_ref_R, rfzmp, zmpP);
-    stepNum = 3;
+    stepNum = 2;
   }  
   else {
     stepNum+=1;
@@ -866,13 +855,10 @@ void sony::testMove()
   //zero=MatrixXd::Zero(dof,1);
   Eigen::MatrixXd zero(Eigen::MatrixXd::Zero(dof,1));
   body_cur=MatrixXd::Zero(dof,1);
-<<<<<<< HEAD
-=======
   m_mcIn.read();
   for(int i=0; i<dof; i++) {
     body_cur(i) = m_mc.data[i];
   }
->>>>>>> 2e1149c0a25f4037364ef194c8f2fae363cb2d61
   /*
   //ver1
   body_ref<<0, 0.00332796, -0.482666, 0.859412, -0.370882, -0.00322683,

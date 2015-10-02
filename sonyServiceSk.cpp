@@ -304,8 +304,6 @@ void OpenHRP::_objref_sonyService::stop()
 
 
 }
-<<<<<<< HEAD
-=======
 // Local call call-back function.
 static void
 _0RL_lcfn_457ccd98b3f23528_70000000(omniCallDescriptor*, omniServant* svnt)
@@ -421,7 +419,6 @@ void OpenHRP::_objref_sonyService::setFootPosL(::CORBA::Double x, ::CORBA::Doubl
 
 
 }
->>>>>>> 2e1149c0a25f4037364ef194c8f2fae363cb2d61
 OpenHRP::_pof_sonyService::~_pof_sonyService() {}
 
 
@@ -491,10 +488,6 @@ OpenHRP::_impl_sonyService::_dispatch(omniCallHandle& _handle)
     return 1;
   }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
   if( omni::strMatch(op, "omniWalkSwitch") ) {
 
     _0RL_cd_457ccd98b3f23528_00000000 _call_desc(_0RL_lcfn_457ccd98b3f23528_70000000, "omniWalkSwitch", 15, 1);
@@ -503,7 +496,6 @@ OpenHRP::_impl_sonyService::_dispatch(omniCallHandle& _handle)
     return 1;
   }
 
->>>>>>> a8366b36e798962e1c9d57076d8ba67464074610
   if( omni::strMatch(op, "setFootPosR2") ) {
 
     _0RL_cd_457ccd98b3f23528_00000000 _call_desc(_0RL_lcfn_457ccd98b3f23528_80000000, "setFootPosR2", 13, 1);
@@ -536,7 +528,6 @@ OpenHRP::_impl_sonyService::_dispatch(omniCallHandle& _handle)
     return 1;
   }
 
->>>>>>> 2e1149c0a25f4037364ef194c8f2fae363cb2d61
 
   return 0;
 }

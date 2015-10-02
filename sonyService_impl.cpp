@@ -77,7 +77,6 @@ void sonyService_impl::setFootPosL(double x, double y, double z, double r, doubl
   m_comp->setFootPosL(x,y,z,r,p,w);
 }
 
-
 // End of example implementational code
 
 
