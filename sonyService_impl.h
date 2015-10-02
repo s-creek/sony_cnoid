@@ -37,7 +37,8 @@ public:
   void testMove();
   void stepping();
   void stop();
- 
+  void omniWalkSwitch();
+
   void setFootPosR2();
   void setFootPosL2();
   void setFootPosR(double x, double y, double z, double r, double p, double w);

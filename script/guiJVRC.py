@@ -110,6 +110,15 @@ def buttonEvent2():
     x=in2.getText()
     setObjectV(str(x))
 
+def buttonEventSetFR():
+    x=inSetFR.getText()
+    setFootPosR(str(x))
+
+def buttonEventSetFL():
+    x=inSetFL.getText()
+    #setFootPosL(str(x))
+    setFootPosR(str(x))
+
 def setRotGainEvent():
     x=inRot.getText()
     setRotGain(str(x))
@@ -139,14 +148,26 @@ pnl.add(obj)
 obj = createButton("stStop", stOff)
 pnl.add(obj)
 
+obj = createButton("sonyStop", sonyStop)
+pnl.add(obj)
+
+obj = createButton("omniWalkSwitch", omniWalkSwitch)
+pnl.add(obj)
+
 obj = createButton("stepping", stepping)
 pnl.add(obj)
 
-obj = createButton("setFootPosR", setFootPosR)
+obj = createButton("setFootPosR", buttonEventSetFR)
 pnl.add(obj)
+inSetFR=JTextField("0.35 -0.096 0.029 0 -0.179 0",15)
+pnl.add(inSetFR)
 
-obj = createButton("setFootPosL", setFootPosL)
+#0.280,  0.096,  0.017,  0.000, -0.178, -0.000
+
+obj = createButton("setFootPosL", buttonEventSetFL)
 pnl.add(obj)
+inSetFL=JTextField("0.65 -0.096 0.084 0 -0.18 0",15)
+pnl.add(inSetFL)
 
 obj = createButton("setObjectV", buttonEvent)
 pnl.add(obj)
