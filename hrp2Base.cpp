@@ -41,7 +41,8 @@ hrp2Base::hrp2Base(RTC::Manager* manager)
     m_baseRpyOut("baseRpyOut", m_baseRpy),
     m_refqOut("refq", m_refq),
     m_basePosInitIn("basePosInit", m_basePosInit),
-    m_baseRpyInitIn("baseRpyInit", m_baseRpyInit)
+    m_baseRpyInitIn("baseRpyInit", m_baseRpyInit),
+    zmpP(0)
     //m_hrp2BaseServicePort("hrp2BaseService")
     // </rtc-template>
 {
@@ -112,9 +113,20 @@ RTC::ReturnCode_t hrp2Base::onInitialize()
   dof = m_robot->numJoints();
   std::cout<<"sony dof robot "<<m_robot->numJoints()<<std::endl;
 
-  coil::stringTo(m_waist_height, prop["waist_height"].c_str());
-  std::cout<<"sony waist_height "<<m_waist_height<<std::endl;
-  m_robot->rootLink()->p()<<0.0, 0.0, m_waist_height;
+  //coil::stringTo(m_waist_height, prop["waist_height"].c_str());
+  //std::cout<<"sony waist_height "<<m_waist_height<<std::endl;
+  //m_robot->rootLink()->p()<<0.0, 0.0, m_waist_height;
+  std::vector<double> tmp;
+  coil::stringTo(tmp, prop["initBasePos"].c_str());
+  m_robot->rootLink()->p() << tmp[0], tmp[1], tmp[2];
+  std::cout << "sony : init base pos = " << tmp[0] << ", " << tmp[1] << ", " << tmp[2] << std::endl;
+
+  
+  tmp.clear();
+  coil::stringTo(tmp, prop["initBaseRpy"].c_str());
+  m_robot->rootLink()->R() = cnoid::rotFromRpy(tmp[0], tmp[1], tmp[2]);
+  std::cout << "sony : init base rpy = " << tmp[0] << ", " << tmp[1] << ", " << tmp[2] << std::endl;
+
 
 
   for(unsigned int i=0;i<dof;i++)
@@ -221,10 +233,6 @@ void hrp2Base::updates()
     m_rfsensorIn.read();
   if( m_lfsensorIn.isNew() ) 
     m_lfsensorIn.read();
-
-
-  if( m_basePosInitIn.isNew() ) m_basePosInitIn.read();
-  if( m_baseRpyInitIn.isNew() ) m_baseRpyInitIn.read();
 }
 
 /*

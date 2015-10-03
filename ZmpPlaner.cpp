@@ -91,10 +91,11 @@ void ZmpPlaner::setInit(vector2 &Ini)
 {
   zmpInit=Ini;
 }
-//////////////
-void ZmpPlaner::setw(double &cm_z_in)
+////////////// ogawa
+void ZmpPlaner::setw(double &cm_z_in, double groundHeight)
 {
   cm_z_cur = cm_z = cm_z_in;
+  cm_z -= groundHeight;
   w=sqrt(9.806/cm_z);
   //w= wIn;
 }

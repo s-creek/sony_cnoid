@@ -183,16 +183,31 @@ RTC::ReturnCode_t sony::onExecute(RTC::UniqueId ec_id)
   step_counter+=1;
   step_counter=step_counter%m_nStep;
   if(step_counter!=0)
-<<<<<<< HEAD
-    return RTC::RTC_OK;
-=======
   return RTC::RTC_OK;
->>>>>>> e8fde6f
   */
 
 
   //read inport
   hrp2Base::updates();
+
+  // ogawa
+  if( m_basePosInitIn.isNew() && m_baseRpyInitIn.isNew() ) {
+    m_basePosInitIn.read();
+    m_baseRpyInitIn.read();
+    m_mcIn.read();
+
+    if( !playflag ) {
+      for(int i=0; i<dof; i++) {
+	m_robot->joint(i)->q() = m_mc.data[i];
+      }
+      m_robot->rootLink()->p() << m_basePosInit.data.x, m_basePosInit.data.y, m_basePosInit.data.z;
+      m_robot->rootLink()->R() = cnoid::rotFromRpy(m_baseRpyInit.data.r, m_baseRpyInit.data.p, m_baseRpyInit.data.y);
+      m_robot->calcForwardKinematics();
+
+      setCurrentData();
+    }
+  }
+
 
   //gamepad
   if(m_axesIn.isNew()){
@@ -332,7 +347,11 @@ inline void sony::calcWholeIVK()
   if((FT==FSRFsw)||(FT==RFsw)){
     //std::cout << p_ref[RLEG].format(Eigen::IOFormat(Eigen::StreamPrecision, 0, ", ", ", ", "", "", "[", "]")) << std::endl;
   }
+  else if((FT==FSLFsw)||(FT==LFsw)){
+    //std::cout << p_ref[LLEG].format(Eigen::IOFormat(Eigen::StreamPrecision, 0, ", ", ", ", "", "", "[", "]")) << std::endl;
+  }
   
+
   if(usePivot){
     if(CalcIVK_biped_toe(m_robot, cm_ref, p_ref, R_ref, FT, end_link))
       getInvResult();
@@ -375,7 +394,8 @@ inline void sony::object_operate()
   //by operator
   Vector3 tep;
   //translation
-  tep<<velobj(0)*0.00005,velobj(1)*0.00005, velobj(2)*0.00005;
+  //tep<<velobj(0)*0.00005,velobj(1)*0.00005, velobj(2)*0.00005;
+  tep<<velobj(0)*0.00005,velobj(1)*0.00005, 0.0;
 
   //ref////////
   yawTotal+=0.01*velobj(5)*M_PI/180;
@@ -383,7 +403,8 @@ inline void sony::object_operate()
   rotRTemp = rZ*rotRTemp ;
   
   object_ref->R() = rotRTemp;
-  object_ref->p() = object_ref->p() + rotationZ(yawTotal)*tep; 
+  //object_ref->p() = object_ref->p() + rotationZ(yawTotal)*tep; 
+  object_ref->p() = object_ref->p() + rotRTemp*tep; // ogawa
 }
 
 inline void sony::calcRefLeg()
@@ -410,6 +431,16 @@ inline void sony::prmGenerator(bool &calczmpflag)//this is calcrzmp flag
       //calc trajectory 
       prm2Planzmp(FT, p_ref, R_ref, RLEG_ref_p, LLEG_ref_p, LEG_ref_R, rfzmp, zmpP);
       calczmpflag=0;//1008 revise
+      /*
+      std::cout << "sony : ref rfoot pos = "
+		<< RLEG_ref_p.format(Eigen::IOFormat(Eigen::StreamPrecision, 0, ", ", ", ", "", "", "[", "]")) << std::endl;
+      std::cout << "sony : ref lfoot pos = "
+		<< LLEG_ref_p.format(Eigen::IOFormat(Eigen::StreamPrecision, 0, ", ", ", ", "", "", "[", "]")) << std::endl;
+      std::cout << "sony : p_ref[RLEG] = "
+		<< p_ref[RLEG].format(Eigen::IOFormat(Eigen::StreamPrecision, 0, ", ", ", ", "", "", "[", "]")) << std::endl;
+      std::cout << "sony : p_ref[LLEG] = "
+		<< p_ref[LLEG].format(Eigen::IOFormat(Eigen::StreamPrecision, 0, ", ", ", ", "", "", "[", "]")) << std::endl;
+      */
     }
   }
   else if(calczmpflag==1){//keep walking start from new leg
@@ -665,8 +696,9 @@ void sony::start()
   RenewModel(m_robot, p_now, R_now, end_link);
 
   cm_ref=m_robot->calcCenterOfMass();// 
-  cout<<"cm "<<cm_ref<<endl;
+  //cout<<"cm "<<cm_ref<<endl;
   //cout<<"inipos"<<'\n'<<m_robot->link("RLEG_JOINT5")->R()<<'\n'<<m_robot->link("LLEG_JOINT5")->R()<<endl;
+  std::cout << "sony : robot pos = " << m_robot->rootLink()->p().format(Eigen::IOFormat(Eigen::StreamPrecision, 0, ", ", ", ", "", "", "[", "]")) << std::endl;
 
   //for expos
   for(int i=0;i<LINKNUM;i++){
@@ -677,25 +709,43 @@ void sony::start()
     //p_ref_toe[i]=p_now[i];
     //R_ref_toe[i]=R_now[i];
   }
-  R_ref[WAIST]=Eigen::MatrixXd::Identity(3,3);
+  p_ref[RLEG](2) -= param.ankle_height;  // ogawa
+  p_ref[LLEG](2) -= param.ankle_height;  // ogawa
+
+
+  //R_ref[WAIST]=Eigen::MatrixXd::Identity(3,3);
+  R_ref[WAIST]=extractYow(m_robot->rootLink()->R());  // ogawa
  
  
   //tvmet::identity<hrp::Matrix3>();
   object_ref->R()= Eigen::MatrixXd::Identity(3,3);
   object_ref->p()= (p_Init[RLEG] +  p_Init[LLEG] )/2;
-  
+  // ogawa
+  {
+    Matrix3 R_R=extractYow(m_robot->link(end_link[RLEG])->R());
+    Matrix3 L_R=extractYow(m_robot->link(end_link[LLEG])->R());
+    
+    Matrix3 Rmid( R_R.transpose() * L_R);//for toe
+    Vector3 omega( omegaFromRot(Rmid));
+    object_ref->R()= R_R*rodoriges(omega, 0.5);
+  }
+
 
   //class ini
-  zmpP= new ZmpPlaner();
-  zmpP->setWpgParam(param);
-  
+  if( !zmpP ) {
+    zmpP= new ZmpPlaner();
+    zmpP->setWpgParam(param);
+  }
   //for path planning/////////////////////////////////////////
   //ini
-  p_obj2RLEG = p_Init[RLEG] - object_ref->p(); 
-  p_obj2LLEG = p_Init[LLEG] - object_ref->p(); 
+  p_obj2RLEG = object_ref->R().transpose() * (p_Init[RLEG] - object_ref->p()); 
+  p_obj2LLEG = object_ref->R().transpose() * (p_Init[LLEG] - object_ref->p()); 
   R_LEG_ini=  LEG_ref_R= Eigen::MatrixXd::Identity(3,3);
+  //R_LEG_ini=  object_ref->R(); // ogawa
 
-  object_ref->p()(2)=0;
+  //object_ref->p()(2)=0;  // comment out by ogawa
+  object_ref->p()(2) -= param.ankle_height;  // ogawa
+  std::cout << "sony : object pos = " << object_ref->p().format(Eigen::IOFormat(Eigen::StreamPrecision, 0, ", ", ", ", "", "", "[", "]")) << std::endl;
   //for pivot///////////////////////////////////////////////
   if(usePivot){
     Position T;
@@ -746,13 +796,13 @@ void sony::start()
   //no good when climb stair
   double w=sqrt(9.806/cm_ref(2));
   //zmpP->setw(w);
-  zmpP->setw(cm_ref(2));
+  zmpP->setw(cm_ref(2), object_ref->p()(2));  // ogawa
   zmpP->setZmpOffsetX(cm_offset_x);
  
   Vector3 rzmpInit;
   NaturalZmp(m_robot, rzmpInit, cm_offset_x, end_link);
   zmpP->setInit( rzmpInit(0) , rzmpInit(1) );//for cp init
-  
+  absZMP(2) = object_ref->p()(2);
   calcRefLeg();
 
   //ooo
@@ -766,6 +816,8 @@ void sony::stepping()
     step=!step;
     cout<<"step"<<endl;
     playflag=1;
+
+    std::cout << "sony : robot pos = " << m_robot->rootLink()->p().format(Eigen::IOFormat(Eigen::StreamPrecision, 0, ", ", ", ", "", "", "[", "]")) << std::endl;
   }
 }
 
@@ -1158,8 +1210,9 @@ void sony::omniWalkSwitch()
   ///////////////////////
   if(!omniWalk){
     object_ref->p()=(m_robot->link(end_link[RLEG])->p() + m_robot->link(end_link[LLEG])->p())/2;
-    object_ref->p()(2)=0;
- 
+    //object_ref->p()(2)=0;
+    object_ref->p()(2) -= param.ankle_height; // ogawa
+
     Matrix3 R_R=extractYow(m_robot->link(end_link[RLEG])->R());
     Matrix3 L_R=extractYow(m_robot->link(end_link[LLEG])->R());
     
@@ -1177,7 +1230,51 @@ void sony::omniWalkSwitch()
 
 
 //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_//_/_/_/_/_/_/_/_/_/_/_/_/_/_/_  //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_
-   
+
+// ogawa
+void sony::setCurrentData()
+{
+  RenewModel(m_robot, p_now, R_now, end_link);
+
+  cm_ref=m_robot->calcCenterOfMass();
+  //for expos
+  for(int i=0;i<LINKNUM;i++){
+    p_Init[i]=p_now[i];
+    R_Init[i]=R_now[i];
+    p_ref[i]=p_now[i];
+    R_ref[i]=R_now[i];
+  }
+  R_ref[WAIST]=extractYow(m_robot->rootLink()->R());
+ 
+  object_ref->p()= (p_Init[RLEG] +  p_Init[LLEG] )/2;
+  object_ref->p()(2) -= param.ankle_height;
+  {
+    Matrix3 R_R=extractYow(m_robot->link(end_link[RLEG])->R());
+    Matrix3 L_R=extractYow(m_robot->link(end_link[LLEG])->R());
+    
+    Matrix3 Rmid( R_R.transpose() * L_R);//for toe
+    Vector3 omega( omegaFromRot(Rmid));
+    object_ref->R()= R_R*rodoriges(omega, 0.5);
+  }
+  rotRTemp=object_ref->R();
+  
+
+  if(usePivot){
+    p_ref[RLEG]=m_robot->link("pivot_R")->p();
+    p_ref[LLEG]=m_robot->link("pivot_L")->p();
+    R_ref[RLEG]=m_robot->link("pivot_R")->R();
+    R_ref[LLEG]=m_robot->link("pivot_L")->R();
+  }
+
+  zmpP->setw(cm_ref(2), object_ref->p()(2));
+  Vector3 rzmpInit;
+  NaturalZmp(m_robot, rzmpInit, cm_offset_x, end_link);
+  zmpP->setInit( rzmpInit(0) , rzmpInit(1) );//for cp init
+  absZMP(2) = object_ref->p()(2);
+  calcRefLeg();
+}
+
+
 extern "C"
 {
  
