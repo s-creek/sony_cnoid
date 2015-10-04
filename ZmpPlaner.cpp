@@ -93,6 +93,7 @@ void ZmpPlaner::setInit(vector2 &Ini)
   zmpInit=Ini;
 }
 //////////////
+// modified by ogawa
 void ZmpPlaner::setw(double &cm_z_in, double groundHeight)
 {
   cm_z_cur = cm_z = cm_z_in;
@@ -576,7 +577,8 @@ void ZmpPlaner::calcSwingLegCP( BodyPtr m_robot, FootType FT, Vector3 *p_ref, Ma
 	double lower=0;
 	Vector3 SwLegNow_p = SwLeg->p() + SwLeg->R() * link_b_ankle;
 	Vector3 SupLegNow_p = SupLeg->p() + SupLeg->R() * link_b_ankle;
-	double cm_z_tgt = cm_z;
+	//double cm_z_tgt = cm_z;
+	double cm_z_tgt = cm_z_cur;  // ogawa
 	double err = 0.001;
 	if( SwLegNow_p(2) >swLegRef_p(2)){//downstair
 	  height = SwLegNow_p(2);

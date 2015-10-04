@@ -350,6 +350,7 @@ inline void sony::calcWholeIVK()
   else if((FT==FSLFsw)||(FT==LFsw)){
     //std::cout << p_ref[LLEG].format(Eigen::IOFormat(Eigen::StreamPrecision, 0, ", ", ", ", "", "", "[", "]")) << std::endl;
   }
+  //std::cout << cm_ref.format(Eigen::IOFormat(Eigen::StreamPrecision, 0, ", ", ", ", "", "", "[", "]")) << std::endl;
   
 
   if(usePivot){
@@ -714,10 +715,6 @@ void sony::start()
     //p_ref_toe[i]=p_now[i];
     //R_ref_toe[i]=R_now[i];
   }
-  p_ref[RLEG](2) -= param.ankle_height;  // ogawa
-  p_ref[LLEG](2) -= param.ankle_height;  // ogawa
-
-
   //R_ref[WAIST]=Eigen::MatrixXd::Identity(3,3);
   R_ref[WAIST]=extractYow(m_robot->rootLink()->R());  // ogawa
  
@@ -819,19 +816,21 @@ void sony::start()
 void sony::stepping()
 {
   if(omniWalk){
+
+    // ogawa
+    if( !playflag ) {
+      m_mcIn.read();
+      for(int i=0;i<dof;i++) {
+    	m_refq.data[i]=body_cur(i)=m_mc.data[i];
+      }
+      setModelPosture(m_robot, m_mc, FT, end_link);
+      setCurrentData();
+    }
+
+
     step=!step;
     cout<<"step"<<endl;
     playflag=1;
-
-
-    // ogawa
-    m_mcIn.read();
-    for(int i=0;i<dof;i++) {
-      m_refq.data[i]=body_cur(i)=m_mc.data[i];
-    }
-    setModelPosture(m_robot, m_mc, FT, end_link);
-    setCurrentData();
-
 
     std::cout << "sony : robot pos = " << m_robot->rootLink()->p().format(Eigen::IOFormat(Eigen::StreamPrecision, 0, ", ", ", ", "", "", "[", "]")) << std::endl;
   }
@@ -895,6 +894,18 @@ void sony::setFootPosR(double x, double y, double z, double r, double p, double 
     stepNum+=1;
   }
 
+
+  // ogawa
+  if( !playflag ) {
+    m_mcIn.read();
+    for(int i=0;i<dof;i++) {
+      m_refq.data[i]=body_cur(i)=m_mc.data[i];
+    }
+    setModelPosture(m_robot, m_mc, FT, end_link);
+    setCurrentData();
+  }
+
+  
   playflag=1;
 }
 
@@ -919,6 +930,18 @@ void sony::setFootPosL(double x, double y, double z, double r, double p, double 
   else {
     stepNum+=1;
   }
+
+
+  // ogawa
+  if( !playflag ) {
+    m_mcIn.read();
+    for(int i=0;i<dof;i++) {
+      m_refq.data[i]=body_cur(i)=m_mc.data[i];
+    }
+    setModelPosture(m_robot, m_mc, FT, end_link);
+    setCurrentData();
+  }
+
 
   playflag=1;
 }
@@ -1369,7 +1392,7 @@ void sony::setCurrentData()
   zmpP->NaturalZmp(m_robot, rzmpInit, end_link);
   zmpP->setInit( rzmpInit(0) , rzmpInit(1) );//for cp init
   //absZMP(2) = object_ref->p()(2);
-  calcRefLeg();
+  //calcRefLeg();
 }
 
 
