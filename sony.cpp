@@ -823,6 +823,16 @@ void sony::stepping()
     cout<<"step"<<endl;
     playflag=1;
 
+
+    // ogawa
+    m_mcIn.read();
+    for(int i=0;i<dof;i++) {
+      m_refq.data[i]=body_cur(i)=m_mc.data[i];
+    }
+    setModelPosture(m_robot, m_mc, FT, end_link);
+    setCurrentData();
+
+
     std::cout << "sony : robot pos = " << m_robot->rootLink()->p().format(Eigen::IOFormat(Eigen::StreamPrecision, 0, ", ", ", ", "", "", "[", "]")) << std::endl;
   }
 }
